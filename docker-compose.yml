@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+
+  # ── FastAPI Backend ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cropxai_backend
+    restart: unless-stopped
+    environment:
+      WEIGHTS_DIR: /app/weights
+      LOG_LEVEL: INFO
+    volumes:
+      # Mount your trained .pth weight files
+      - ./weights:/app/weights:ro
+    ports:
+      - "8000:8000"     # also exposed directly for debugging
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            # Remove the 'devices' block if you don't have a GPU
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ── React Frontend ──────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # The frontend container proxies /api → backend via nginx,
+        # but this env var is used by the direct dev axios client
+        VITE_API_URL: http://localhost:8000
+    container_name: cropxai_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+networks:
+  default:
+    name: cropxai_network

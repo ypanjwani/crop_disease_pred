@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: crop-disease-xai
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    envVars:
+      - key: WEIGHTS_DIR
+        value: /app/weights
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CORS_ORIGINS
+        value: ""   # leave blank — frontend is same-origin; set to your Render URL if needed
+    disk:
+      name: model-weights
+      mountPath: /app/weights
+      sizeGB: 5
