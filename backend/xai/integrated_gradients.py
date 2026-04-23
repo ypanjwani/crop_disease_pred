@@ -21,7 +21,7 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-N_STEPS          = 50      # interpolation steps (accuracy vs speed)
+N_STEPS          = 25      # interpolation steps (accuracy vs speed)
 IG_THRESHOLD     = 0.20    # suppress attribution noise below this quantile
 
 

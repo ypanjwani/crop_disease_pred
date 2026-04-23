@@ -21,7 +21,7 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-NUM_SAMPLES    = 500   # number of perturbed samples (stability vs speed trade-off)
+NUM_SAMPLES    = 100   # number of perturbed samples (stability vs speed trade-off)
 TOP_FEATURES   = 5     # number of top superpixels to highlight
 HIDE_REST      = True  # hide non-contributing pixels for cleaner visualisation
 

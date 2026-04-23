@@ -4,9 +4,11 @@ FastAPI router for the /predict endpoint.
 """
 
 import logging
+from functools import partial
 from typing import List, Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 
 from models.architectures import CLASS_NAMES
@@ -79,13 +81,16 @@ async def predict(
     # ── Retrieve registry (set during lifespan startup) ───────────────────────
     registry: ModelRegistry = request.app.state.model_registry
 
-    # ── Run pipeline ──────────────────────────────────────────────────────────
+    # ── Run pipeline (offload blocking CPU work off the event loop) ───────────
     try:
-        results = run_pipeline(
-            loaded_models=registry.get_all(),
-            pil_image=pil_image,
-            device=registry.device,
-            selected_keys=selected_keys,
+        results = await run_in_threadpool(
+            partial(
+                run_pipeline,
+                loaded_models=registry.get_all(),
+                pil_image=pil_image,
+                device=registry.device,
+                selected_keys=selected_keys,
+            )
         )
     except Exception as e:
         logger.exception("Pipeline error")
